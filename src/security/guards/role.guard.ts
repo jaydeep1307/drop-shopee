@@ -24,7 +24,6 @@ export class RolesGuard implements CanActivate {
       [context.getHandler(), context.getClass()]
     );
 
-    console.log("requiredRole: ", requiredRole);
     const { user } = context.switchToHttp().getRequest();
 
     if (!user) throw AuthExceptions.ForbiddenException();
