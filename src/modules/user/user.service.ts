@@ -1,10 +1,15 @@
-import { Injectable } from "@nestjs/common";
+import { HttpStatus, Injectable } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { InjectModel } from "@nestjs/mongoose";
 import * as bcrypt from "bcrypt"; // Importing bcrypt for password hashing
 import { Model } from "mongoose";
+import {
+  USER_CREATED,
+  USER_LOGGEDIN,
+} from "src/common/constants/response-message.constants";
 import { TypeExceptions } from "src/common/exceptions"; // Custom exceptions
 import { JwtTokenInterface } from "src/common/interfaces/jwt.interface"; // Interface for JWT payload
+import { successResponse } from "src/common/responses/success.helper";
 import { CreateUserDto } from "./dto/create-user.dto"; // DTO for creating a new user
 import { SigninUserDto } from "./dto/signin-user.dto"; // DTO for user signin
 import { User, UserDocument } from "./schemas/user.schema"; // User schema definition
@@ -43,7 +48,7 @@ export class UserService {
     // Generating user payload including JWT token
     const userPayload = this.generateUserPayload(user, access_token);
 
-    return userPayload; // Returning user payload
+    return successResponse(USER_CREATED, userPayload, HttpStatus.CREATED);
   }
 
   async loginUser(signinUserDto: SigninUserDto) {
@@ -69,8 +74,10 @@ export class UserService {
     // Generating user payload including JWT token
     const userPayload = this.generateUserPayload(user, access_token);
 
-    return userPayload; // Returning user payload
+    return successResponse(USER_LOGGEDIN, userPayload, HttpStatus.OK);
   }
+
+  // ============================== HELPER FUNCTIONS ===================================
 
   // Helper function to generate JWT token
   private generateToken(payload: JwtTokenInterface) {

@@ -1,7 +1,16 @@
-import { Injectable } from "@nestjs/common";
+import { HttpStatus, Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
-import { PRODUCT_NOT_FOUND } from "src/common/constants/response-message.constants";
+import {
+  BID_PLACE,
+  PRODUCT_CREATED,
+  PRODUCT_DELETE,
+  PRODUCT_DETAIL,
+  PRODUCT_LIST,
+  PRODUCT_NOT_FOUND,
+  PRODUCT_UPDATED,
+  SLOT_CREATED,
+} from "src/common/constants/response-message.constants";
 import {
   AuthExceptions,
   CustomError,
@@ -19,6 +28,7 @@ import { UpdateProductDto } from "./dto/update-product.dto";
 import { ProductStatus } from "src/common/enums";
 import { Product, ProductDocument } from "./schemas/product.schema";
 import { User, UserDocument } from "../user/schemas/user.schema";
+import { successResponse } from "src/common/responses/success.helper";
 
 @Injectable()
 export class ProductsService {
@@ -58,7 +68,7 @@ export class ProductsService {
       image: product.image,
     };
 
-    return payload;
+    return successResponse(PRODUCT_CREATED, payload, HttpStatus.CREATED);
   }
 
   // Method to find all products with pagination and search
@@ -76,7 +86,7 @@ export class ProductsService {
       total_records: total,
     };
 
-    return productsPayload;
+    return successResponse(PRODUCT_LIST, productsPayload, HttpStatus.OK);
   }
 
   // Method to find details of a specific product
@@ -91,7 +101,7 @@ export class ProductsService {
       image: product.image,
     };
 
-    return payload;
+    return successResponse(PRODUCT_DETAIL, payload, HttpStatus.OK);
   }
 
   // Method to update details of a product
@@ -132,7 +142,7 @@ export class ProductsService {
       image: updatedProduct.image,
     };
 
-    return payload;
+    return successResponse(PRODUCT_UPDATED, payload, HttpStatus.OK);
   }
 
   // Method to delete a product
@@ -151,6 +161,8 @@ export class ProductsService {
 
     if (!deletedProduct)
       throw TypeExceptions.NotFoundCommMsg(PRODUCT_NOT_FOUND);
+
+    return successResponse(PRODUCT_DELETE, {}, HttpStatus.OK);
   }
 
   // Method to create slots for a product
@@ -192,11 +204,13 @@ export class ProductsService {
 
     const { bidSlots } = product;
 
-    return {
+    const payload = {
       bidSlots,
       remainingAmount: productPrice - totalSlotAmount - currentSlotPrice,
       productPrice,
     };
+
+    return successResponse(SLOT_CREATED, payload, HttpStatus.CREATED);
   }
 
   // Method to place a bid on a product
@@ -217,6 +231,8 @@ export class ProductsService {
 
     // Save the product to persist changes
     await product.save();
+
+    return successResponse(BID_PLACE, {}, HttpStatus.CREATED);
   }
 
   async declareWinner(productId: string) {
@@ -248,7 +264,11 @@ export class ProductsService {
 
     product.save();
 
-    return bidWinner;
+    return successResponse(
+      `${bidWinner.name} is the winner `,
+      bidWinner,
+      HttpStatus.OK
+    );
   }
 
   // ============================== HELPER FUNCTIONS ===================================
@@ -390,7 +410,10 @@ export class ProductsService {
     return userPayload;
   }
 
-  private binarySearchTofindIndex(priceRanges: number[], randomNumber): number {
+  private binarySearchTofindIndex(
+    priceRanges: number[],
+    randomNumber: number
+  ): number {
     let low = 0;
     let high = priceRanges.length - 1;
 
